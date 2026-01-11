@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing System</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Billing System</h1>
+            <nav>
+                <button class="nav-btn active" data-page="billing">Billing</button>
+                <button class="nav-btn" data-page="dashboard">Dashboard</button>
+                <button class="nav-btn" data-page="admin">Admin</button>
+            </nav>
+        </header>
+
+        <!-- Billing Page -->
+        <div id="billing-page" class="page active">
+            <div class="billing-container">
+                <div class="scanner-section">
+                    <h2>Scan QR Code</h2>
+                    <div id="qr-reader"></div>
+                    <button id="start-scanner" class="btn btn-primary">Start Scanner</button>
+                    <button id="stop-scanner" class="btn btn-secondary" style="display: none;">Stop Scanner</button>
+                </div>
+
+                <div class="bill-section">
+                    <h2>Current Bill</h2>
+                    <div class="bill-items" id="bill-items">
+                        <div class="bill-header">
+                            <span>Product</span>
+                            <span>Price</span>
+                            <span>Action</span>
+                        </div>
+                    </div>
+                    <div class="bill-footer">
+                        <div class="total">
+                            <strong>Total: ₹<span id="total-amount">0.00</span></strong>
+                            <label class="payment-checkbox">
+                                <input type="checkbox" id="payment-done">
+                                <span>Payment Done</span>
+                            </label>
+                        </div>
+                        <button id="generate-bill" class="btn btn-success" disabled>Generate Bill</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="page">
+            <div class="dashboard-container">
+                <h2>Dashboard</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Items Sold Today</h3>
+                        <p id="items-sold-today">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Revenue Today</h3>
+                        <p id="revenue-today">₹0.00</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Bills Today</h3>
+                        <p id="bills-today">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Revenue</h3>
+                        <p id="total-revenue">₹0.00</p>
+                    </div>
+                </div>
+
+                <div class="export-section">
+                    <h3>Export Data</h3>
+                    <div class="export-buttons">
+                        <button id="export-excel" class="btn btn-primary">Export to Excel</button>
+                        <button id="export-sql" class="btn btn-primary">Export to SQL</button>
+                    </div>
+                </div>
+
+                <div class="recent-bills">
+                    <h3>Recent Bills</h3>
+                    <div id="recent-bills-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Page -->
+        <div id="admin-page" class="page">
+            <div class="admin-container">
+                <div id="admin-login" class="admin-login">
+                    <h2>Admin Access</h2>
+                    <div class="login-form">
+                        <input type="password" id="admin-password" placeholder="Enter Admin Password" class="password-input">
+                        <button id="admin-login-btn" class="btn btn-primary">Login</button>
+                        <p id="admin-error" class="error-message"></p>
+                    </div>
+                </div>
+                <div id="admin-content" class="admin-content" style="display: none;">
+                    <h2>Admin Panel</h2>
+                    <div class="admin-actions">
+                        <button id="reset-database" class="btn btn-danger">Reset Database</button>
+                        <button id="admin-logout" class="btn btn-secondary">Logout</button>
+                    </div>
+                    <div class="admin-table-section">
+                        <h3>Bills & Items Management</h3>
+                        <div class="table-container">
+                            <table id="admin-bills-table" class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Bill ID</th>
+                                        <th>Date</th>
+                                        <th>Total Amount</th>
+                                        <th>Product ID</th>
+                                        <th>PSU Code</th>
+                                        <th>Weight</th>
+                                        <th>Price</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Modal -->
+        <div id="edit-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2>Edit Bill Item</h2>
+                <form id="edit-form">
+                    <input type="hidden" id="edit-item-id">
+                    <input type="hidden" id="edit-bill-id">
+                    <div class="form-group">
+                        <label>Product ID:</label>
+                        <input type="text" id="edit-product-id" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>PSU Code:</label>
+                        <input type="text" id="edit-psu-code" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Weight:</label>
+                        <input type="text" id="edit-weight" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Price:</label>
+                        <input type="number" id="edit-price" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Bill Total Amount:</label>
+                        <input type="number" id="edit-bill-total" step="0.01" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" id="cancel-edit">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
