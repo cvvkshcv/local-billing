@@ -112,6 +112,9 @@ nav {
     margin-bottom: 20px;
     max-height: 400px;
     overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .bill-header {
@@ -137,16 +140,99 @@ nav {
     align-items: center;
 }
 
+/* Responsive bill items */
+@media (max-width: 768px) {
+    .bill-items {
+        padding: 10px;
+        max-height: none;
+        overflow-y: visible;
+    }
+    
+    .bill-section {
+        width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .bill-header {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        font-size: 11px;
+        padding: 8px;
+        display: none; /* Hide header on mobile for cleaner look */
+    }
+    
+    .bill-header span {
+        display: block;
+        padding: 4px 0;
+    }
+    
+    .bill-item {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .bill-item .product-name {
+        font-size: 14px;
+        word-break: break-word;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+    
+    .price-label {
+        display: block !important; /* Show label on mobile */
+        font-size: 13px;
+        color: #333;
+        margin-bottom: 4px;
+    }
+    
+    .bill-item input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        font-size: 16px; /* Larger for mobile touch */
+    }
+    
+    .bill-item .btn {
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    /* Add labels for mobile */
+    .bill-item::before {
+        content: none;
+    }
+}
+
 .bill-item input {
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .bill-item .product-name {
     font-weight: 500;
     color: #333;
+    word-break: break-word;
+}
+
+.price-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.price-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #666;
+    display: none; /* Hidden on desktop */
 }
 
 .bill-footer {
@@ -155,6 +241,8 @@ nav {
     align-items: center;
     padding-top: 20px;
     border-top: 2px solid #ddd;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .total {
@@ -525,5 +613,26 @@ nav {
     .admin-table th,
     .admin-table td {
         padding: 8px;
+    }
+    
+    .bill-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .bill-footer .total {
+        text-align: center;
+    }
+    
+    .bill-footer .btn {
+        width: 100%;
+    }
+    
+    .scanner-section {
+        margin-bottom: 20px;
+    }
+    
+    #qr-reader {
+        width: 100% !important;
     }
 }

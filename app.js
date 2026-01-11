@@ -18,6 +18,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Initialize SQLite database
 async function initDatabase() {
     try {
+        // Check if initSqlJs is available
+        if (typeof initSqlJs === 'undefined') {
+            throw new Error('SQL.js library not loaded. Please check if sql-wasm.js is loaded correctly.');
+        }
+        
         const SQL = await initSqlJs({
             locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
         });
@@ -338,13 +343,16 @@ function renderBillItems() {
         itemDiv.className = 'bill-item';
         itemDiv.innerHTML = `
             <span class="product-name">PSU Code: ${item.psuCode} (Weight: ${item.weight})</span>
-            <input type="number" 
-                   class="price-input" 
-                   data-index="${index}" 
-                   value="${item.price}" 
-                   step="0.01" 
-                   min="0" 
-                   placeholder="Enter price">
+            <div class="price-input-wrapper">
+                <label class="price-label">Price:</label>
+                <input type="number" 
+                       class="price-input" 
+                       data-index="${index}" 
+                       value="${item.price}" 
+                       step="0.01" 
+                       min="0" 
+                       placeholder="Enter price">
+            </div>
             <button class="btn btn-danger remove-item" data-index="${index}">Remove</button>
         `;
         container.appendChild(itemDiv);

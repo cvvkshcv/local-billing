@@ -20,7 +20,19 @@ This guide will help you deploy the Billing System to GitHub Pages.
 6. **Do NOT** initialize with README, .gitignore, or license (we already have these)
 7. Click **Create repository**
 
-### 2. Initialize Git and Push Code
+### 2. Download SQL.js Library Files
+
+Before pushing to GitHub, download the SQL.js library files:
+
+**Option 1 (Recommended)**: Run the download script:
+- On macOS/Linux: `./download-sqljs.sh`
+- On Windows: `download-sqljs.bat`
+
+**Option 2**: Manually download:
+- Create a `libs/` directory
+- Download `sql-wasm.js` and `sql-wasm.wasm` from the URLs in `libs/README.md`
+
+### 3. Initialize Git and Push Code
 
 Open your terminal/command prompt in the project directory and run:
 
@@ -42,15 +54,18 @@ git branch -M main
 git push -u origin main
 ```
 
-### 3. Enable GitHub Pages
+### 4. Enable GitHub Pages
 
 1. Go to your repository on GitHub
 2. Click on the **Settings** tab
 3. Scroll down to the **Pages** section in the left sidebar
-4. Under **Source**, select:
-   - Branch: **main** (or **master**)
-   - Folder: **/ (root)**
+4. Under **Build and deployment**, select:
+   - **Source**: Deploy from a branch
+   - **Branch**: Select **main** (or **master** if that's your default branch)
+   - **Folder**: Select **/ (root)**
 5. Click **Save**
+
+**Important**: Do NOT select "GitHub Actions" as the source. Use "Deploy from a branch" instead, as this is a static site that doesn't need a build process.
 
 ### 4. Access Your Deployed App
 

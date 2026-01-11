@@ -31,3 +31,7 @@ build/
 # Temporary files
 *.tmp
 *.temp
+
+# SQL.js library files (uncomment if you want to ignore them)
+# libs/sql-wasm.js
+# libs/sql-wasm.wasm
