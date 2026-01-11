@@ -39,6 +39,12 @@
                             <span>Action</span>
                         </div>
                     </div>
+                    <div class="bill-customer-info">
+                        <div class="customer-input-group">
+                            <label for="customer-mobile">Customer Mobile Number:</label>
+                            <input type="tel" id="customer-mobile" placeholder="Enter mobile number" class="mobile-input">
+                        </div>
+                    </div>
                     <div class="bill-footer">
                         <div class="total">
                             <strong>Total: ₹<span id="total-amount">0.00</span></strong>
@@ -117,12 +123,13 @@
                                     <tr>
                                         <th>Bill ID</th>
                                         <th>Date</th>
+                                        <th>Mobile</th>
                                         <th>Total Amount</th>
                                         <th>Product ID</th>
                                         <th>PSU Code</th>
                                         <th>Weight</th>
                                         <th>Price</th>
-                                        <th>Actions</th>
+                                        <!-- <th>Actions</th> -->
                                     </tr>
                                 </thead>
                                 <tbody id="admin-table-body">

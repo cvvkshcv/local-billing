@@ -235,6 +235,40 @@ nav {
     display: none; /* Hidden on desktop */
 }
 
+.bill-customer-info {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.customer-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.customer-input-group label {
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.mobile-input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.mobile-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
 .bill-footer {
     display: flex;
     justify-content: space-between;

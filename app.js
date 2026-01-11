@@ -53,7 +53,8 @@ function createTables() {
         CREATE TABLE IF NOT EXISTS bills (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             bill_date TEXT NOT NULL,
-            total_amount REAL NOT NULL
+            total_amount REAL NOT NULL,
+            mobile_number TEXT
         )
     `);
     
@@ -105,13 +106,28 @@ function migrateDatabaseIfNeeded() {
             return;
         }
         
-        // Check if bills table has old schema (items column)
+        // Check if mobile_number column exists in bills table
         const billsColumns = billsTableInfo[0].values.map(row => row[1]);
-        const hasItemsColumn = billsColumns.includes('items');
+        const hasMobileNumber = billsColumns.includes('mobile_number');
         
+        if (!hasMobileNumber) {
+            // Add mobile_number column if it doesn't exist
+            console.log('Adding mobile_number column to bills table...');
+            try {
+                db.run("ALTER TABLE bills ADD COLUMN mobile_number TEXT");
+                saveDatabase();
+                console.log('Database migration completed - mobile_number column added');
+            } catch (e) {
+                // If ALTER fails, might be because of existing structure
+                console.log('Migration note:', e.message);
+            }
+        }
+        
+        // Check if bills table has old schema (items column) - legacy migration
+        const hasItemsColumn = billsColumns.includes('items');
         if (hasItemsColumn) {
             // Old schema detected, migrate to new schema
-            console.log('Migrating database to new schema...');
+            console.log('Migrating database from old schema...');
             
             // Drop old tables
             db.run("DROP TABLE IF EXISTS bill_items");
@@ -407,12 +423,13 @@ function generateBill() {
     }
     
     const billDate = new Date().toISOString();
+    const mobileNumber = document.getElementById('customer-mobile').value.trim() || null;
     
     // Insert bill record
     db.run(
-        `INSERT INTO bills (bill_date, total_amount) 
-         VALUES (?, ?)`,
-        [billDate, total]
+        `INSERT INTO bills (bill_date, total_amount, mobile_number) 
+         VALUES (?, ?, ?)`,
+        [billDate, total, mobileNumber]
     );
     
     // Get the last inserted bill ID
@@ -435,6 +452,7 @@ function generateBill() {
     // Clear current bill and reset payment checkbox
     currentBillItems = [];
     document.getElementById('payment-done').checked = false;
+    document.getElementById('customer-mobile').value = '';
     document.getElementById('generate-bill').disabled = true;
     renderBillItems();
 }
@@ -494,10 +512,10 @@ function loadRecentBills() {
     if (!db) return;
     
     const result = db.exec(`
-        SELECT b.id, b.bill_date, b.total_amount, COUNT(bi.id) as item_count
+        SELECT b.id, b.bill_date, b.total_amount, b.mobile_number, COUNT(bi.id) as item_count
         FROM bills b
         LEFT JOIN bill_items bi ON b.id = bi.bill_id
-        GROUP BY b.id, b.bill_date, b.total_amount
+        GROUP BY b.id, b.bill_date, b.total_amount, b.mobile_number
         ORDER BY b.bill_date DESC 
         LIMIT 10
     `);
@@ -511,13 +529,14 @@ function loadRecentBills() {
     
     container.innerHTML = '';
     result[0].values.forEach(row => {
-        const [id, date, amount, itemCount] = row;
+        const [id, date, amount, mobileNumber, itemCount] = row;
         const billDate = new Date(date).toLocaleString();
+        const mobileDisplay = mobileNumber ? ` | Mobile: ${mobileNumber}` : '';
         const billDiv = document.createElement('div');
         billDiv.className = 'bill-list-item';
         billDiv.innerHTML = `
             <div class="bill-info">
-                <div>Bill #${id} (${itemCount} items)</div>
+                <div>Bill #${id} (${itemCount} items)${mobileDisplay}</div>
                 <div class="bill-date">${billDate}</div>
             </div>
             <div class="bill-amount">₹${parseFloat(amount).toFixed(2)}</div>
@@ -539,6 +558,7 @@ function exportToExcel() {
             SELECT 
                 b.id as bill_id,
                 b.bill_date,
+                b.mobile_number,
                 b.total_amount,
                 bi.product_id,
                 bi.psu_code,
@@ -559,17 +579,18 @@ function exportToExcel() {
         
         // Combined sheet with bill and item information in meaningful rows
         const combinedData = [
-            ['Bill ID', 'Bill Date', 'Bill Total Amount', 'Product ID', 'PSU Code', 'Weight', 'Item Price']
+            ['Bill ID', 'Bill Date', 'Mobile Number', 'Bill Total Amount', 'Product ID', 'PSU Code', 'Weight', 'Item Price']
         ];
         
         if (combinedResult[0].values.length > 0) {
             combinedResult[0].values.forEach(row => {
-                const [billId, billDate, totalAmount, productId, psuCode, weight, price] = row;
+                const [billId, billDate, mobileNumber, totalAmount, productId, psuCode, weight, price] = row;
                 // Format date for better readability
                 const formattedDate = new Date(billDate).toLocaleString();
                 combinedData.push([
                     billId,
                     formattedDate,
+                    mobileNumber || '',
                     parseFloat(totalAmount).toFixed(2),
                     productId,
                     psuCode,
@@ -701,6 +722,7 @@ function loadAdminTable() {
                 bi.id as item_id,
                 b.id as bill_id,
                 b.bill_date,
+                b.mobile_number,
                 b.total_amount,
                 bi.product_id,
                 bi.psu_code,
@@ -715,30 +737,32 @@ function loadAdminTable() {
         tbody.innerHTML = '';
         
         if (result.length === 0 || result[0].values.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">No bills found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px;">No bills found</td></tr>';
             return;
         }
         
         result[0].values.forEach(row => {
-            const [itemId, billId, billDate, totalAmount, productId, psuCode, weight, price] = row;
+            const [itemId, billId, billDate, mobileNumber, totalAmount, productId, psuCode, weight, price] = row;
             const formattedDate = new Date(billDate).toLocaleString();
+            const mobileDisplay = mobileNumber || '-';
             
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${billId}</td>
                 <td>${formattedDate}</td>
+                <td>${mobileDisplay}</td>
                 <td>₹${parseFloat(totalAmount).toFixed(2)}</td>
                 <td>${productId}</td>
                 <td>${psuCode}</td>
                 <td>${weight}</td>
                 <td>₹${parseFloat(price).toFixed(2)}</td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="btn btn-primary btn-small edit-btn" data-item-id="${itemId}" data-bill-id="${billId}">Edit</button>
-                        <button class="btn btn-danger btn-small delete-btn" data-item-id="${itemId}" data-bill-id="${billId}">Delete</button>
-                    </div>
-                </td>
             `;
+            // <td>
+            //     <div class="action-buttons">
+            //         <button class="btn btn-primary btn-small edit-btn" data-item-id="${itemId}" data-bill-id="${billId}">Edit</button>
+            //         <button class="btn btn-danger btn-small delete-btn" data-item-id="${itemId}" data-bill-id="${billId}">Delete</button>
+            //     </div>
+            // </td>
             tbody.appendChild(tr);
         });
         
